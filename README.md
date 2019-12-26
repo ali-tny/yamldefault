@@ -6,6 +6,11 @@ which to return (which can be optionally overwritten).
 My specific use case is via binding it to a bash function `todo` which opens up notes files - so I
 can context switch for a day of personal work via `todo personal`, for example.
 
+## Installation
+
+Run `make build` and put the binary somewhere in your path (or just `go install` if $GOPATH is
+reachable).
+
 ## Usage
 
 Example yaml file, in say `~/.notes_locations.yml`:
