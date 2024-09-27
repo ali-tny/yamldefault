@@ -33,11 +33,16 @@ func expandPath(path string) string {
 	return path
 }
 
-func overwriteDefaultLocation(t NotesConfig, osArgs []string) NotesConfig {
+func overwriteDefaultLocation(t NotesConfig, osArgs []string) (NotesConfig, error) {
 	if len(osArgs) > 2 {
-		t.DefaultLocation = osArgs[2]
+		newLocation := osArgs[2]
+		if _, exists := t.Locations[newLocation]; exists {
+			t.DefaultLocation = newLocation
+		} else {
+			return t, fmt.Errorf("error: location '%s' does not exist in the configuration", newLocation)
+		}
 	}
-	return t
+	return t, nil
 }
 
 func main() {
@@ -49,8 +54,8 @@ func main() {
 	err = yaml.Unmarshal([]byte(data), &config)
 	logErr(err)
 
-	config = overwriteDefaultLocation(config, os.Args)
-
+	config, err = overwriteDefaultLocation(config, os.Args)
+	logErr(err)
 	yaml_string, err := yaml.Marshal(&config)
 	logErr(err)
 	err = ioutil.WriteFile(path, yaml_string, 0644)

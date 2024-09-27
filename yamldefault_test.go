@@ -37,30 +37,44 @@ func TestExpandPath(t *testing.T) {
 
 func TestOverwriteDefaultLocation(t *testing.T) {
 	tables := []struct {
+		name     string
 		osArgs   []string
 		expected string
+		wantErr  bool
 	}{
-		{[]string{"file"}, "test"},
-		{[]string{"file", "location"}, "test"},
-		{[]string{"file", "location", "new"}, "new"},
-		{[]string{"file", "location", "other"}, "other"},
+		{"Default location", []string{"file"}, "test", false},
+		{"No change", []string{"file", "location"}, "test", false},
+		{"Valid new location", []string{"file", "location", "test_2"}, "test_2", false},
+		{"Invalid new location", []string{"file", "location", "invalid"}, "", true},
 	}
 
 	for _, table := range tables {
-		locations := map[string]string{"test": "test", "test_2": "test_2"}
-		config := NotesConfig{"test", locations}
-		out := overwriteDefaultLocation(config, table.osArgs)
-		if !reflect.DeepEqual(out.Locations, locations) {
-			t.Errorf(
-				"Overwrite altered locations: got: %s, expected no change (%s)",
-				out.Locations,
-				locations,
-			)
-		}
-		if out.DefaultLocation != table.expected {
-			t.Errorf(
-				"Overwrite was incorrect, got: %s, want: %s.", out.DefaultLocation, table.expected,
-			)
-		}
+		t.Run(table.name, func(t *testing.T) {
+			locations := map[string]string{"test": "test", "test_2": "test_2"}
+			config := NotesConfig{"test", locations}
+			out, err := overwriteDefaultLocation(config, table.osArgs)
+
+			if table.wantErr {
+				if err == nil {
+					t.Errorf("Expected an error, but got none")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Unexpected error: %v", err)
+				}
+				if !reflect.DeepEqual(out.Locations, locations) {
+					t.Errorf(
+						"Overwrite altered locations: got: %s, expected no change (%s)",
+						out.Locations,
+						locations,
+					)
+				}
+				if out.DefaultLocation != table.expected {
+					t.Errorf(
+						"Overwrite was incorrect, got: %s, want: %s.", out.DefaultLocation, table.expected,
+					)
+				}
+			}
+		})
 	}
 }
